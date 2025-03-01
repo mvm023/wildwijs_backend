@@ -23,7 +23,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = ['wildwijs.nl']
+CORS_ALLOWED_ORIGINS = ['https://wildwijs.nl']
 
 STORAGES = {
     "default": {
