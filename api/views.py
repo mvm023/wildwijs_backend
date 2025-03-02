@@ -3,7 +3,10 @@ import random
 import requests
 from django.http import JsonResponse, HttpResponse
 from django.conf import settings
-from django.shortcuts import render
+from rest_framework import viewsets, permissions
+from rest_framework.response import Response
+from .serializers import *
+from .models import *
 
 # Using the MEDIA_URL and MEDIA_ROOT from settings
 IMAGE_FOLDER = os.path.join(settings.MEDIA_ROOT, "images")
@@ -133,7 +136,12 @@ def get_wrong_answers(results, name, order, className, family):
     random.shuffle(wrong_answers)
     return wrong_answers[:3]
 
+class organismViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.AllowAny]
+    queryset = Organism.objects.all()
+    serializer_class = OrganismSerializer
 
-# def serve_react_app(request):
-#     """ Serve the React app index.html """
-#     return render(request, "index.html")
+    def list(self, request):
+        queryset = Organism.objects.all()
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
