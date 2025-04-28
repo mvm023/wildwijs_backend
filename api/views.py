@@ -30,52 +30,35 @@ birds_or_prey_orders = ["Accipitriformes", "Falconiformes", "Strigiformes"]
 
 
 def fetch_animal_data(animal_class, occurrence_status_type, max_length):
-    """ Fetches animal data for a given class (e.g., Aves, Mammalia). """
-    base_url = "https://api.biodiversitydata.nl/v2/taxon/query"
-    query_params = {
-        "defaultClassification.className": animal_class,
-        "sourceSystem.code": "NSR",
-        "_size": 1000,
-        "_from": 0,
-        "_fields": "vernacularNames,defaultClassification.className,defaultClassification.order,defaultClassification.family,occurrenceStatusVerbatim",
-    }
-
-    response = requests.get(base_url, params=query_params)
-    if response.status_code != 200:
-        return []
-
-    data = response.json()
-    results = data.get("resultSet", [])
-    named_results = [i for i in results if "vernacularNames" in i["item"] and i["item"]["vernacularNames"]]
+    # Base queryset filtered by class
+    organisms = Organism.objects.filter(classification__class_name=animal_class)
 
     if occurrence_status_type in occurrence_status_codes:
-        filtered_results = [i for i in named_results if "occurrenceStatusVerbatim" in i["item"] and i["item"]["occurrenceStatusVerbatim"] in occurrence_status_codes[occurrence_status_type]]
-
+        organisms = organisms.filter(occurrence_status_verbatim__in=occurrence_status_codes[occurrence_status_type])
     elif occurrence_status_type == "birdsOfPrey":
-        filtered_results = [i for i in named_results if i["item"]["defaultClassification"]["order"] in birds_or_prey_orders]
+        organisms = organisms.filter(classification__order__in=birds_or_prey_orders)
 
-    random.shuffle(filtered_results)
+    organisms = list(organisms)
+    random.shuffle(organisms)
 
     animals = []
     k = 0
-    while len(animals) < max_length and k < len(filtered_results):
-        item = filtered_results[k]
+    while len(animals) < max_length and k < len(organisms):
+        organism = organisms[k]
         k += 1
-        correct_name = item["item"]["vernacularNames"][0]["name"]
+
+        correct_name = organism.name
 
         # Construct image path
         image_filename = f"{animal_class}/{correct_name.lower().replace(' ', '_')}.jpg"
         image_url = f"{settings.MEDIA_URL}images/{image_filename}"
-        image_path = os.path.join(IMAGE_FOLDER, image_filename)
 
-        # Check if the image exists in the media folder
-        if not os.path.exists(image_path):
-            print(f"No image found for path {image_path}, skipping")
-            continue  # Skip if no image found
+        animal_class_name = organism.classification.class_name
+        animal_order = organism.classification.order
+        animal_family = organism.classification.family
 
-        animal_class_name = item["item"]["defaultClassification"]["className"]
-        animal_order = item["item"]["defaultClassification"]["order"]
-        animal_family = item["item"]["defaultClassification"]["family"]
+        # Prepare wrong answers based on database instead of API results
+        wrong_answers = get_wrong_answers(animal_class_name, animal_order, animal_family, correct_name)
 
         animal = {
             "name": correct_name,
@@ -83,11 +66,12 @@ def fetch_animal_data(animal_class, occurrence_status_type, max_length):
             "order": animal_order,
             "family": animal_family,
             "image": image_url,
-            "wrongAnswers": get_wrong_answers(named_results, correct_name, order=animal_order, className=animal_class_name, family=animal_family),
+            "wrongAnswers": wrong_answers,
         }
         if not any(a["name"] == correct_name for a in animals):
             print(f"Adding {animal['name']} to list of animals")
             animals.append(animal)
+
     return animals
 
 
@@ -97,44 +81,41 @@ def get_animal_data(request, animal_class, occurrence_status_type, max_length):
     return JsonResponse(animals, safe=False)
 
 
-def get_wrong_answers(results, name, order, className, family):
-    """ Fetch wrong answers for a given animal. """
-    wrong_answers = [
-        i["item"]["vernacularNames"][0]["name"]
-        for i in results
-        if i["item"]["vernacularNames"][0]["name"] != name
-        and i["item"]["defaultClassification"]["className"] == className
-        and i["item"]["defaultClassification"]["order"] == order
-        and i["item"]["defaultClassification"]["family"] == family
-    ]
+def get_wrong_answers(class_name, order, family, correct_name):
+    """ Get wrong answers from the database. """
 
-    if len(wrong_answers) < 3:
-        wrong_answers = [
-            i["item"]["vernacularNames"][0]["name"]
-            for i in results
-            if i["item"]["vernacularNames"][0]["name"] != name
-            and i["item"]["defaultClassification"]["className"] == className
-            and i["item"]["defaultClassification"]["order"] == order
-        ]
+    # Try to find wrong answers first from the same family
+    wrongs = Organism.objects.filter(
+        classification__class_name=class_name,
+        classification__order=order,
+        classification__family=family
+    ).exclude(name=correct_name)
 
-    if len(wrong_answers) < 3:
-        wrong_answers = [
-            i["item"]["vernacularNames"][0]["name"]
-            for i in results
-            if i["item"]["vernacularNames"][0]["name"] != name
-            and i["item"]["defaultClassification"]["className"] == className
-        ]
+    if wrongs.count() < 3:
+        # Try from same order
+        wrongs = Organism.objects.filter(
+            classification__class_name=class_name,
+            classification__order=order
+        ).exclude(name=correct_name)
 
-    wrong_answers = list(set(wrong_answers))
+    if wrongs.count() < 3:
+        # Try from same class
+        wrongs = Organism.objects.filter(
+            classification__class_name=class_name
+        ).exclude(name=correct_name)
 
-    while len(wrong_answers) < 3:
-        new_item = random.choice(results)
-        new_wrong_answer = new_item["item"]["vernacularNames"][0]["name"]
-        if new_wrong_answer not in wrong_answers and new_wrong_answer != name:
-            wrong_answers.append(new_wrong_answer)
+    wrong_names = list(wrongs.values_list('name', flat=True))
+    wrong_names = list(set(wrong_names))  # Remove any duplicates
 
-    random.shuffle(wrong_answers)
-    return wrong_answers[:3]
+    while len(wrong_names) < 3:
+        # Backup: randomly add names if too few
+        extra = Organism.objects.exclude(name=correct_name).order_by('?').values_list('name', flat=True)[:1]
+        if extra:
+            wrong_names.append(extra[0])
+
+    random.shuffle(wrong_names)
+    return wrong_names[:3]
+
 
 class organismViewSet(viewsets.ViewSet):
     permission_classes = [permissions.AllowAny]
