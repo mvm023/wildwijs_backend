@@ -32,6 +32,7 @@ birds_or_prey_orders = ["Accipitriformes", "Falconiformes", "Strigiformes"]
 def fetch_animal_data(animal_class, occurrence_status_type, max_length):
     # Base queryset filtered by class
     organisms = Organism.objects.filter(classification__class_name=animal_class)
+    organisms = organisms.filter(image_url__isnull=False).exclude(image_url='')
 
     if occurrence_status_type in occurrence_status_codes:
         organisms = organisms.filter(occurrence_status_verbatim__in=occurrence_status_codes[occurrence_status_type])
@@ -49,14 +50,6 @@ def fetch_animal_data(animal_class, occurrence_status_type, max_length):
 
         correct_name = organism.name
 
-        for organism in organisms:
-            if not organism.image_url:
-                print(f"No image URL for {organism.name}, skipping")
-                continue  # Skip if no image URL
-
-            image_url = organism.image_url  # Just take the URL directly
-
-
         animal_class_name = organism.classification.class_name
         animal_order = organism.classification.order
         animal_family = organism.classification.family
@@ -69,7 +62,7 @@ def fetch_animal_data(animal_class, occurrence_status_type, max_length):
             "class": animal_class_name,
             "order": animal_order,
             "family": animal_family,
-            "image": image_url,
+            "image": organism.image_url,
             "wrongAnswers": wrong_answers,
         }
         if not any(a["name"] == correct_name for a in animals):

@@ -16,7 +16,7 @@ class Classification(models.Model):
 
 class Organism(models.Model):
     name = models.CharField(unique=True,max_length=150)
-    description = models.CharField(max_length=1000, blank=True)
+    description = models.TextField(blank=True)
     scientific_name = models.CharField(unique=True,max_length=200)
     classification = models.ForeignKey(Classification, on_delete=models.CASCADE)
     occurrence_status_verbatim = models.CharField(max_length=255, blank=True)  # New field for occurrence status
