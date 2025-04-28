@@ -23,6 +23,7 @@ class Organism(models.Model):
     alternative_names = models.JSONField(null=True, blank=True)  # New field for alternative names as a list of strings
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now = True)
+    image_url = models.URLField(blank=True, null=True)
 
     def __str__(self):
         return self.name
