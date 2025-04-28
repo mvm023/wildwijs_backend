@@ -49,9 +49,13 @@ def fetch_animal_data(animal_class, occurrence_status_type, max_length):
 
         correct_name = organism.name
 
-        # Construct image path
-        image_filename = f"{animal_class}/{correct_name.lower().replace(' ', '_')}.jpg"
-        image_url = f"{settings.MEDIA_URL}images/{image_filename}"
+        for organism in organisms:
+            if not organism.image_url:
+                print(f"No image URL for {organism.name}, skipping")
+                continue  # Skip if no image URL
+
+            image_url = organism.image_url  # Just take the URL directly
+
 
         animal_class_name = organism.classification.class_name
         animal_order = organism.classification.order
