@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from backend.api.image_scrape_api import scrape_images_for_organisms
+from image_scrape_api import scrape_images_for_organisms
 from django.conf import settings
 
 class Command(BaseCommand):
