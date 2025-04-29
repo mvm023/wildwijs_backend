@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 # Create your models here.
 
@@ -24,6 +25,18 @@ class Organism(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now = True)
     image_url = models.URLField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+    
+class Quiz(models.Model):
+    name = models.CharField(max_length=255)
+    image_url = models.URLField()
+    class_name = models.JSONField(default=list, blank=True)
+    order = models.JSONField(default=list, blank=True)
+    family = models.JSONField(default=list, blank=True)
+    genus = models.JSONField(default=list, blank=True)
+    max_length = models.PositiveIntegerField(default=15)
 
     def __str__(self):
         return self.name

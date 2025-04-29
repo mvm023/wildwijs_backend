@@ -113,7 +113,7 @@ def clean_scientific_name(name):
 
 def scrape_images_for_organisms():
     for organism in Organism.objects.all():
-        if organism.name != "Oehoe":
+        if organism.image_url:
             continue  # Already has an image
 
         scientific_name = clean_scientific_name(organism.scientific_name)

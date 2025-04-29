@@ -8,8 +8,6 @@ from rest_framework.response import Response
 from .serializers import *
 from .models import *
 
-# Using the MEDIA_URL and MEDIA_ROOT from settings
-IMAGE_FOLDER = os.path.join(settings.MEDIA_ROOT, "images")
 
 occurrence_status_codes = {
     "native": [
@@ -26,35 +24,45 @@ occurrence_status_codes = {
 
 occurrence_status_codes["both"] = occurrence_status_codes["native"] + occurrence_status_codes["invasive"]
 
-birds_or_prey_orders = ["Accipitriformes", "Falconiformes", "Strigiformes"]
 
+def fetch_quiz_data(quiz_id):
+    quiz = Quiz.objects.get(id=quiz_id)
 
-def fetch_animal_data(animal_class, occurrence_status_type, max_length):
-    # Base queryset filtered by class
-    organisms = Organism.objects.filter(classification__class_name=animal_class)
+    organisms = Organism.objects.all()
+
+    # Apply classification filters if specified
+    if quiz.class_name:
+        organisms = organisms.filter(classification__class_name__in=quiz.class_name)
+    if quiz.order:
+        organisms = organisms.filter(classification__order__in=quiz.order)
+    if quiz.family:
+        organisms = organisms.filter(classification__family__in=quiz.family)
+    if quiz.genus:
+        organisms = organisms.filter(classification__genus__in=quiz.genus)
+
+    # Ensure image exists
     organisms = organisms.filter(image_url__isnull=False).exclude(image_url='')
 
-    if occurrence_status_type in occurrence_status_codes:
-        organisms = organisms.filter(occurrence_status_verbatim__in=occurrence_status_codes[occurrence_status_type])
-    elif occurrence_status_type == "birdsOfPrey":
-        organisms = organisms.filter(classification__order__in=birds_or_prey_orders)
+    # Handle occurrence status type
+    # if occurrence_status_type in occurrence_status_codes:
+    #     organisms = organisms.filter(
+    #         occurrence_status_verbatim__in=occurrence_status_codes[occurrence_status_type]
+    #     )
 
     organisms = list(organisms)
     random.shuffle(organisms)
 
     animals = []
     k = 0
-    while len(animals) < max_length and k < len(organisms):
+    while len(animals) < quiz.max_length and k < len(organisms):
         organism = organisms[k]
         k += 1
 
         correct_name = organism.name
-
         animal_class_name = organism.classification.class_name
         animal_order = organism.classification.order
         animal_family = organism.classification.family
 
-        # Prepare wrong answers based on database instead of API results
         wrong_answers = get_wrong_answers(animal_class_name, animal_order, animal_family, correct_name)
 
         animal = {
@@ -65,16 +73,16 @@ def fetch_animal_data(animal_class, occurrence_status_type, max_length):
             "image": organism.image_url,
             "wrongAnswers": wrong_answers,
         }
+
         if not any(a["name"] == correct_name for a in animals):
-            print(f"Adding {animal['name']} to list of animals")
             animals.append(animal)
 
     return animals
 
 
-def get_animal_data(request, animal_class, occurrence_status_type, max_length):
-    """ API endpoint to get animal data for a given class (e.g., Aves, Mammalia). """
-    animals = fetch_animal_data(animal_class, occurrence_status_type, int(max_length))
+def get_quiz_data(request, quiz_id):
+    """ API endpoint to get animal data for a given quiz. """
+    animals = fetch_quiz_data(quiz_id)
     return JsonResponse(animals, safe=False)
 
 
@@ -114,12 +122,10 @@ def get_wrong_answers(class_name, order, family, correct_name):
     return wrong_names[:3]
 
 
-class organismViewSet(viewsets.ViewSet):
-    permission_classes = [permissions.AllowAny]
+class OrganismViewSet(viewsets.ModelViewSet):
     queryset = Organism.objects.all()
     serializer_class = OrganismSerializer
 
-    def list(self, request):
-        queryset = Organism.objects.all()
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
+class QuizViewSet(viewsets.ModelViewSet):
+    queryset = Quiz.objects.all()
+    serializer_class = QuizSerializer
