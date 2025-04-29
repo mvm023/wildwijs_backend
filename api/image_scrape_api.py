@@ -111,7 +111,7 @@ def clean_scientific_name(name):
         return f"{parts[0]} {parts[1]}"
     return name  # fallback in case it's weirdly formatted
 
-def scrape_images_for_organisms():
+def scrape_images_for_organisms(bucket_name="wildwijs-images-dev"):
     for organism in Organism.objects.all():
         if organism.image_url:
             continue  # Already has an image
@@ -122,6 +122,6 @@ def scrape_images_for_organisms():
         if image_url:
             local_image = download_image(image_url)
             print(f"Downloaded image for {organism.name}")
-            s3_url = upload_to_s3(local_image, "wildwijs-images-dev")
+            s3_url = upload_to_s3(local_image, bucket_name)
             organism.image_url = s3_url
             organism.save()
