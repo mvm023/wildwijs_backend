@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from biodiversity_api import import_organisms
+from api.biodiversity_api import import_organisms
 from django.conf import settings
 
 
