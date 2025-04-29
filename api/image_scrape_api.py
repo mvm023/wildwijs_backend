@@ -123,5 +123,6 @@ def scrape_images_for_organisms(bucket_name="wildwijs-images-dev"):
             local_image = download_image(image_url)
             print(f"Downloaded image for {organism.name}")
             s3_url = upload_to_s3(local_image, bucket_name)
-            organism.image_url = s3_url
-            organism.save()
+            if s3_url:
+                organism.image_url = s3_url
+                organism.save()
