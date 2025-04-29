@@ -5,3 +5,4 @@ from .models import *
 
 admin.site.register(Classification)
 admin.site.register(Organism)
+admin.site.register(Quiz)

@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 # Create your models here.
 
@@ -16,13 +17,26 @@ class Classification(models.Model):
 
 class Organism(models.Model):
     name = models.CharField(unique=True,max_length=150)
-    description = models.CharField(max_length=1000, blank=True)
+    description = models.TextField(blank=True)
     scientific_name = models.CharField(unique=True,max_length=200)
     classification = models.ForeignKey(Classification, on_delete=models.CASCADE)
     occurrence_status_verbatim = models.CharField(max_length=255, blank=True)  # New field for occurrence status
     alternative_names = models.JSONField(null=True, blank=True)  # New field for alternative names as a list of strings
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now = True)
+    image_url = models.URLField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+    
+class Quiz(models.Model):
+    name = models.CharField(max_length=255)
+    image_url = models.URLField()
+    class_name = models.JSONField(default=list, blank=True)
+    order = models.JSONField(default=list, blank=True)
+    family = models.JSONField(default=list, blank=True)
+    genus = models.JSONField(default=list, blank=True)
+    max_length = models.PositiveIntegerField(default=15)
 
     def __str__(self):
         return self.name

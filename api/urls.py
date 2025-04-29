@@ -4,10 +4,11 @@ from .views import *
 
 
 router = DefaultRouter()
-router.register('organism',organismViewSet, basename='organism')
+router.register('organism',OrganismViewSet, basename='organism')
+router.register('quizzes', QuizViewSet, basename='quiz')  # Register QuizViewSet
 
 customUrlPatters = [
-    path("getAnimalData/<str:animal_class>/<str:occurrence_status_type>/<str:max_length>/", get_animal_data, name="get_animal_data"),
+    path("getQuizData/<int:quiz_id>/", get_quiz_data, name="get_quiz_data"),
 ]
 
 urlpatterns = router.urls + customUrlPatters

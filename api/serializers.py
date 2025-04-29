@@ -10,3 +10,8 @@ class OrganismSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organism
         fields = ('id','name','description','scientific_name','classification')
+
+class QuizSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quiz
+        fields = "__all__"
