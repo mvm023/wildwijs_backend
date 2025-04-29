@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 from .models import Organism
 import re
 import os
+import boto3
+from botocore.exceptions import NoCredentialsError
 
 def fetch_best_image_from_observation_org(scientific_name):
     """ Fetch the best species image URL from observation.org using scientific name and photo likes. """
@@ -26,29 +28,26 @@ def fetch_best_image_from_observation_org(scientific_name):
     species_id = species_link.attrs['href'].split('/')[2]
     print(f"Species id for {scientific_name} is {species_id}")
     
-    # Step 3: Try to fetch photos starting with highest number of likes
-    likes_thresholds = [100, 50, 10, 5, 1, 0]
-    
-    for likes in likes_thresholds:
-        photos_url = f"https://observation.org/species/{species_id}/photos/?likes={likes}"
-        response = requests.get(photos_url)
-        
-        if response.status_code != 200:
-            print(f"Failed to fetch photos page for likes={likes}. Status code: {response.status_code}")
-            continue
-        
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        img_tags = soup.find_all('img')
 
-        image_url = None
-        for img in img_tags:
-            src = img.get('src')
-            if src:
-                if src.startswith('/media/photo/') and '.jpg' in src:
-                    image_url = f"https://observation.org{src}"
-                    break  # Take the first valid image
     
+    photos_url = f"https://observation.org/species/{species_id}/"
+    response = requests.get(photos_url)
+    
+    if response.status_code != 200:
+        print(f"Failed to fetch page for species={scientific_name}. Status code: {response.status_code}")
+    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    img_tags = soup.find_all('a')
+
+    image_url = None
+    for img in img_tags:
+        src = img.get('href')
+        if src:
+            if src.startswith('/media/photo/') and '.jpg' in src:
+                image_url = f"https://observation.org{src}"
+                break  # Take the first valid image
+
     return image_url
 
 def download_image(image_url, folder='/tmp'):
@@ -76,12 +75,42 @@ def download_image(image_url, folder='/tmp'):
     
     return local_path
 
+def upload_to_s3(local_image_path, bucket_name):
+    """Upload a file to an S3 bucket."""
+    s3 = boto3.client('s3')  # Create an S3 client
+
+    filename = os.path.basename(local_image_path)
+    s3_path = f"organism-images/{filename}"
+
+    try:
+        # Upload the image to S3
+        try:
+            s3.upload_file(local_image_path, bucket_name, s3_path)
+            print(f"Uploaded {local_image_path} to S3 as {s3_path}")
+        except Exception as e:
+            print(f"Upload failed for {local_image_path}: {e}")
+                
+        # Return the S3 URL of the uploaded image
+        s3_url = f"https://{bucket_name}.s3.amazonaws.com/{s3_path}"
+        return s3_url
+
+    except FileNotFoundError:
+        print(f"File not found: {local_image_path}")
+    except NoCredentialsError:
+        print("Credentials not available for S3.")
+    except Exception as e:
+        print(f"An error occurred while uploading to S3: {e}")
+    
+    return None
+
+
 def clean_scientific_name(name):
     """Extract just the genus and species from a full scientific name."""
     parts = name.split()
     if len(parts) >= 2:
         return f"{parts[0]} {parts[1]}"
     return name  # fallback in case it's weirdly formatted
+
 def scrape_images_for_organisms():
     for organism in Organism.objects.all():
         if organism.name != "Oehoe":
@@ -93,6 +122,6 @@ def scrape_images_for_organisms():
         if image_url:
             local_image = download_image(image_url)
             print(f"Downloaded image for {organism.name}")
-            # s3_url = upload_to_s3(local_image, organism.name)
-            # organism.image_url = s3_url
-            # organism.save()
+            s3_url = upload_to_s3(local_image, "wildwijs-images-dev")
+            organism.image_url = s3_url
+            organism.save()
