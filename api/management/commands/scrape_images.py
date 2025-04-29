@@ -7,8 +7,11 @@ class Command(BaseCommand):
     help = 'Scrape and upload images for organisms'
 
     def handle(self, *args, **kwargs):
-        # Use different bucket for production vs development
-        bucket_name = "wildwijs-images-prod" if 'RENDER_EXTERNAL_HOSTNAME' in os.environ else "wildwijs-images-dev"
+        bucket_name = os.environ.get("AWS_STORAGE_BUCKET_NAME")
+
+        if not bucket_name:
+            self.stderr.write("Environment variable AWS_STORAGE_BUCKET_NAME not set.")
+            return
         
         self.stdout.write(f"Using S3 bucket: {bucket_name}")
         
