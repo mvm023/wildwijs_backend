@@ -11,10 +11,10 @@ quizUrlPatterns = [
     path("getQuizData/<int:quiz_id>/", get_quiz_data, name="get_quiz_data"),
 ]
 
-authenticationUrlPatters = [
+authenticationUrlPatterns = [
     path('register/', UserRegistrationView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
 ]
 
-urlpatterns = router.urls + quizUrlPatterns + authenticationUrlPatters
+urlpatterns = router.urls + quizUrlPatterns + authenticationUrlPatterns
