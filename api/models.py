@@ -67,7 +67,6 @@ class Quiz(models.Model):
     )
 
     layer = models.ForeignKey(QuizLayer, on_delete=models.CASCADE, related_name='quizzes')
-    category = models.ForeignKey(QuizCategory, on_delete=models.CASCADE, related_name='quizzes')
 
     def __str__(self):
         return self.name
