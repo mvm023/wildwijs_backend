@@ -87,7 +87,6 @@ def get_quiz_data(request, quiz_id: int):
 
 def get_wrong_answers(class_name, order, family, correct_name, difficulty=DifficultyLevel.HARD):
     """ Get wrong answers from the database. """
-    print(f"Difficulty is {difficulty}")
     base_query = Organism.objects.filter(
         classification__class_name=class_name,
     ).exclude(name=correct_name)
@@ -113,7 +112,6 @@ def get_wrong_answers(class_name, order, family, correct_name, difficulty=Diffic
     
     elif difficulty == DifficultyLevel.EASY:
         wrongs = base_query.exclude(classification__order=order)
-        print(f"wrongs = {wrongs}")
         if wrongs.count() < 3:
             wrongs = base_query.exclude(classification__family=family)
         if wrongs.count() < 3:
