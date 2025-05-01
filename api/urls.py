@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 from .views.views import *
-from .views.auth import LoginView, UserRegistrationView, LogoutView
+from .views.auth import LoginView, UserRegistrationView, LogoutView, confirm_email
 
 router = DefaultRouter()
 router.register('organism',OrganismViewSet, basename='organism')
@@ -15,6 +15,7 @@ authenticationUrlPatterns = [
     path('register/', UserRegistrationView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
+    path('confirm-email/<uidb64>/<token>/', confirm_email, name='confirm-email'),
 ]
 
 urlpatterns = router.urls + quizUrlPatterns + authenticationUrlPatterns

@@ -43,3 +43,5 @@ DATABASES = {
         conn_max_age=600,
     )
 }
+
+FRONTEND_URL = "https://wildwijs.nl"
