@@ -14,7 +14,15 @@ class OrganismSerializer(serializers.ModelSerializer):
         model = Organism
         fields = ('id','name','description','scientific_name','classification')
 
+class QuizLayerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuizLayer
+        fields = ['id', 'level', 'category']
+
+
 class QuizSerializer(serializers.ModelSerializer):
+    layer = QuizLayerSerializer()
+
     class Meta:
         model = Quiz
         fields = "__all__"

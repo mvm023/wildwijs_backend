@@ -23,7 +23,7 @@ occurrence_status_codes = {
 occurrence_status_codes["both"] = occurrence_status_codes["native"] + occurrence_status_codes["invasive"]
 
 
-def fetch_quiz_data(quiz_id):
+def fetch_quiz_data(quiz_id: int):
     quiz = Quiz.objects.get(id=quiz_id)
 
     organisms = Organism.objects.all()
@@ -60,8 +60,9 @@ def fetch_quiz_data(quiz_id):
         animal_class_name = organism.classification.class_name
         animal_order = organism.classification.order
         animal_family = organism.classification.family
+        difficulty = quiz.difficulty
 
-        wrong_answers = get_wrong_answers(animal_class_name, animal_order, animal_family, correct_name)
+        wrong_answers = get_wrong_answers(animal_class_name, animal_order, animal_family, correct_name, difficulty)
 
         animal = {
             "name": correct_name,
@@ -78,34 +79,43 @@ def fetch_quiz_data(quiz_id):
     return animals
 
 
-def get_quiz_data(request, quiz_id):
+def get_quiz_data(request, quiz_id: int):
     """ API endpoint to get animal data for a given quiz. """
     animals = fetch_quiz_data(quiz_id)
     return JsonResponse(animals, safe=False)
 
 
-def get_wrong_answers(class_name, order, family, correct_name):
+def get_wrong_answers(class_name, order, family, correct_name, difficulty=DifficultyLevel.HARD):
     """ Get wrong answers from the database. """
-
-    # Try to find wrong answers first from the same family
-    wrongs = Organism.objects.filter(
+    base_query = Organism.objects.filter(
         classification__class_name=class_name,
-        classification__order=order,
-        classification__family=family
     ).exclude(name=correct_name)
 
-    if wrongs.count() < 3:
-        # Try from same order
-        wrongs = Organism.objects.filter(
-            classification__class_name=class_name,
-            classification__order=order
-        ).exclude(name=correct_name)
+    if difficulty == DifficultyLevel.HARD:
+        wrongs = base_query.filter(
+            classification__order=order,
+            classification__family=family
+        )
 
-    if wrongs.count() < 3:
-        # Try from same class
-        wrongs = Organism.objects.filter(
-            classification__class_name=class_name
-        ).exclude(name=correct_name)
+        if wrongs.count() < 3:
+            # Try from same order
+            wrongs = Organism.objects.filter(
+                classification__class_name=class_name,
+                classification__order=order
+            ).exclude(name=correct_name)
+
+        if wrongs.count() < 3:
+            # Try from same class
+            wrongs = Organism.objects.filter(
+                classification__class_name=class_name
+            ).exclude(name=correct_name)
+    
+    elif difficulty == DifficultyLevel.EASY:
+        wrongs = base_query.exclude(classification__order=order)
+        if wrongs.count() < 3:
+            wrongs = base_query.exclude(classification__family=family)
+        if wrongs.count() < 3:
+            wrongs = base_query
 
     wrong_names = list(wrongs.values_list('name', flat=True))
     wrong_names = list(set(wrong_names))  # Remove any duplicates
@@ -127,19 +137,3 @@ class OrganismViewSet(viewsets.ModelViewSet):
 class QuizViewSet(viewsets.ModelViewSet):
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
-
-
-from rest_framework.response import Response
-from rest_framework import status, generics
-from django.contrib.auth.models import User
-from ..serializers import UserSerializer
-
-class UserRegistrationView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        return Response({"message": "User created successfully", "user": UserSerializer(user).data}, status=status.HTTP_201_CREATED)

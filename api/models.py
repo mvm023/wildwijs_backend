@@ -29,6 +29,29 @@ class Organism(models.Model):
     def __str__(self):
         return self.name
     
+class QuizCategory(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class QuizLayer(models.Model):
+    category = models.ForeignKey(QuizCategory, on_delete=models.CASCADE, related_name='layers')
+    level = models.PositiveIntegerField(help_text="The depth level of the layer in this category")
+    
+    class Meta:
+        unique_together = ('category', 'level')
+        ordering = ['level']
+
+    def __str__(self):
+        return f"{self.category.name} – Layer {self.level}"
+
+
+class DifficultyLevel(models.TextChoices):
+    EASY = 'easy', 'Easy'
+    HARD = 'hard', 'Hard'
+
 class Quiz(models.Model):
     name = models.CharField(max_length=255)
     image_url = models.URLField()
@@ -37,6 +60,14 @@ class Quiz(models.Model):
     family = models.JSONField(default=list, blank=True)
     genus = models.JSONField(default=list, blank=True)
     max_length = models.PositiveIntegerField(default=15)
+    difficulty = models.CharField(
+        max_length=10,
+        choices=DifficultyLevel.choices,
+        default=DifficultyLevel.EASY,
+    )
+
+    layer = models.ForeignKey(QuizLayer, on_delete=models.CASCADE, related_name='quizzes')
+    category = models.ForeignKey(QuizCategory, on_delete=models.CASCADE, related_name='quizzes')
 
     def __str__(self):
         return self.name
