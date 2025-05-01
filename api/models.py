@@ -28,7 +28,11 @@ class Organism(models.Model):
 
     def __str__(self):
         return self.name
-    
+
+class DifficultyLevel(models.TextChoices):
+    EASY = 'easy', 'Easy'
+    HARD = 'hard', 'Hard'
+
 class Quiz(models.Model):
     name = models.CharField(max_length=255)
     image_url = models.URLField()
@@ -37,6 +41,11 @@ class Quiz(models.Model):
     family = models.JSONField(default=list, blank=True)
     genus = models.JSONField(default=list, blank=True)
     max_length = models.PositiveIntegerField(default=15)
+    difficulty = models.CharField(
+        max_length=10,
+        choices=DifficultyLevel.choices,
+        default=DifficultyLevel.EASY,
+    )
 
     def __str__(self):
         return self.name

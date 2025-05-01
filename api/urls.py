@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-from .views.views import *
+from .views.quiz import *
 from .views.auth import LoginView, UserRegistrationView, LogoutView, confirm_email
 
 router = DefaultRouter()
