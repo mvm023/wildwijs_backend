@@ -9,6 +9,9 @@ CSRF_TRUSTED_ORIGINS = [f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}"]
 
 DDEBUG = False
 
+FRONTEND_URL = "https://wildwijs.nl/"
+
+
 AWS_ACCESS_KEY_ID = os.environ.get(('AWS_ACCESS_KEY_ID'))
 AWS_SECRET_ACCESS_KEY = os.environ.get(('AWS_SECRET_ACCESS_KEY'))
 AWS_STORAGE_BUCKET_NAME = os.environ.get(('AWS_STORAGE_BUCKET_NAME'))

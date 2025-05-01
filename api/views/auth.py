@@ -18,10 +18,15 @@ from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_bytes
+import os
+
+FRONTEND_URL = 'https://wildwijs.nl' if 'RENDER_EXTERNAL_HOSTNAME' in os.environ else 'http://localhost:5173'
 
 class UserRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -31,9 +36,7 @@ class UserRegistrationView(generics.CreateAPIView):
         # Generate email confirmation link
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
-        confirm_url = request.build_absolute_uri(
-            reverse('confirm-email', kwargs={'uidb64': uid, 'token': token})
-        )
+        confirm_url = f"{FRONTEND_URL}/activate-account/{uid}/{token}"
 
         # Send the email
         send_mail(
@@ -84,6 +87,6 @@ def confirm_email(request, uidb64, token):
     if default_token_generator.check_token(user, token):
         user.is_active = True
         user.save()
-        return Response({"message": "Je account is succesvol geactiveerd!"})
+        return Response({"message": "Je account is succesvol geactiveerd! Je kunt nu inloggen."})
     else:
         return Response({"error": "Ongeldige of verlopen token."}, status=status.HTTP_400_BAD_REQUEST)
