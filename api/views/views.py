@@ -1,12 +1,10 @@
-import os
 import random
-import requests
 from django.http import JsonResponse, HttpResponse
 from django.conf import settings
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
-from .serializers import *
-from .models import *
+from ..serializers import *
+from ..models import *
 
 
 occurrence_status_codes = {
@@ -129,3 +127,19 @@ class OrganismViewSet(viewsets.ModelViewSet):
 class QuizViewSet(viewsets.ModelViewSet):
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
+
+
+from rest_framework.response import Response
+from rest_framework import status, generics
+from django.contrib.auth.models import User
+from ..serializers import UserSerializer
+
+class UserRegistrationView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response({"message": "User created successfully", "user": UserSerializer(user).data}, status=status.HTTP_201_CREATED)

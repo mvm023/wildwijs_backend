@@ -43,3 +43,14 @@ DATABASES = {
         conn_max_age=600,
     )
 }
+
+FRONTEND_URL = "https://wildwijs.nl"
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'email-smtp.eu-central-1.amazonaws.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = os.environ.get(('EMAIL_HOST_USER'))
+EMAIL_HOST_PASSWORD = os.environ.get(('EMAIL_HOST_PASSWORD'))
+DEFAULT_FROM_EMAIL = 'noreply@wildwijs.nl'
