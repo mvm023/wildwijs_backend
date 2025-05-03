@@ -7,7 +7,7 @@ ALLOWED_HOSTS = [os.environ.get('RENDER_EXTERNAL_HOSTNAME')]
 
 CSRF_TRUSTED_ORIGINS = [f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}"]
 
-DDEBUG = False
+DEBUG = False
 
 FRONTEND_URL = "https://wildwijs.nl/"
 
@@ -57,3 +57,13 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get(('EMAIL_HOST_USER'))
 EMAIL_HOST_PASSWORD = os.environ.get(('EMAIL_HOST_PASSWORD'))
 DEFAULT_FROM_EMAIL = 'noreply@wildwijs.nl'
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://wildwijs.nl",
+]
+
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True

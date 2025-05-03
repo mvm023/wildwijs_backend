@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
     
     'rest_framework',
     'rest_framework.authtoken',
@@ -192,3 +193,17 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'api.validators.CustomPasswordValidator',
     },
 ]
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',  # For dev
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+SESSION_COOKIE_SAMESITE = "None"   # or "None" for cross-origin
+SESSION_COOKIE_SECURE = True     # Only for local development
+
+CORS_ALLOW_CREDENTIALS = True

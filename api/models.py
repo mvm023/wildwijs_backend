@@ -1,8 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
-# Create your models here.
-
 class Classification(models.Model):
     kingdom = models.CharField(max_length=150)
     phylum = models.CharField(max_length=150)
