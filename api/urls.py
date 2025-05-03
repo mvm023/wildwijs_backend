@@ -9,6 +9,8 @@ router.register('quizzes', QuizViewSet, basename='quiz')  # Register QuizViewSet
 
 quizUrlPatterns = [
     path("getQuizData/<int:quiz_id>/", get_quiz_data, name="get_quiz_data"),
+    path("startQuiz/<int:quiz_id>/", start_quiz, name="start_quiz"),
+    path("answerQuestion/", answer_question, name="answer_question")
 ]
 
 authenticationUrlPatterns = [

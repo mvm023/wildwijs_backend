@@ -1,10 +1,14 @@
+import json
 import random
-from django.http import JsonResponse, HttpResponse
+import uuid
+from django.http import JsonResponse
 from django.conf import settings
-from rest_framework import viewsets, permissions
-from rest_framework.response import Response
+from rest_framework import viewsets
+from django.core.cache import cache
+from rest_framework.decorators import api_view
 from ..serializers import *
 from ..models import *
+
 
 
 occurrence_status_codes = {
@@ -40,12 +44,6 @@ def fetch_quiz_data(quiz_id: int):
 
     # Ensure image exists
     organisms = organisms.filter(image_url__isnull=False).exclude(image_url='')
-
-    # Handle occurrence status type
-    # if occurrence_status_type in occurrence_status_codes:
-    #     organisms = organisms.filter(
-    #         occurrence_status_verbatim__in=occurrence_status_codes[occurrence_status_type]
-    #     )
 
     organisms = list(organisms)
     random.shuffle(organisms)
@@ -83,6 +81,58 @@ def get_quiz_data(request, quiz_id: int):
     """ API endpoint to get animal data for a given quiz. """
     animals = fetch_quiz_data(quiz_id)
     return JsonResponse(animals, safe=False)
+
+def start_quiz(request, quiz_id: int):
+    quiz = Quiz.objects.get(id=quiz_id)
+    questions = fetch_quiz_data(quiz.id)
+
+    # Create a session-based quiz ID
+    session_key = request.session.session_key
+    if not session_key:
+        request.session.create()
+        session_key = request.session.session_key
+
+    quiz_session_id = str(uuid.uuid4())  # client will send this back when answering
+
+    # Store answers in cache (not sent to client)
+    question_data = []
+    for i, q in enumerate(questions):
+        q_id = f"{quiz_session_id}_{i}"
+        cache.set(q_id, q["name"], timeout=600)  # Only store the correct name
+        question_data.append({
+            "image": q["image"],
+            "options": q["wrongAnswers"] + [q["name"]],
+            "question_id": i  # Needed to validate later
+        })
+
+    return JsonResponse({
+        "quiz_session_id": quiz_session_id,
+        "questions": question_data,
+    })
+
+@api_view(['POST'])
+def answer_question(request):
+    print("Session key:", request.session.session_key)
+    print("Session items:", request.session.items())
+
+    data = json.loads(request.body)
+    quiz_session_id = data["quiz_session_id"]
+    question_id = data["question_id"]
+    selected = data["selected"]
+
+    print(f"Option {selected} has been selected for question with id {question_id} and quiz session id {quiz_session_id}")
+
+    session_key = request.session.session_key
+    if not session_key:
+        return JsonResponse({"error": "No session"}, status=400)
+
+    cache_key = f"{quiz_session_id}_{question_id}"
+    correct = cache.get(cache_key)
+
+    if correct is None:
+        return JsonResponse({"error": "Invalid question or session"}, status=404)
+
+    return JsonResponse({"correct": selected == correct})
 
 
 def get_wrong_answers(class_name, order, family, correct_name, difficulty=DifficultyLevel.HARD):
