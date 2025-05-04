@@ -7,6 +7,7 @@ from rest_framework import viewsets
 from django.core.cache import cache
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny
@@ -221,4 +222,46 @@ class QuizViewSet(viewsets.ModelViewSet):
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['user'] = self.request.user  # Pass the user object to the serializer context
+        return context
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = QuizCategory.objects.all()
+    serializer_class = QuizCategorySerializer
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['user'] = self.request.user 
+        return context
+
+
+class SubcategoryViewSet(viewsets.ModelViewSet):
+    serializer_class = QuizSubCategorySerializer
+
+    def get_queryset(self):
+        category_id = self.kwargs['category_id']
+        category = get_object_or_404(QuizCategory, id=category_id)
+        return category.subcategories.all()
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['user'] = self.request.user 
+        return context
+
+class QuizBySubcategoryViewSet(viewsets.ModelViewSet):
+    queryset = Quiz.objects.all()
+    serializer_class = QuizSerializer
+
+    def get_queryset(self):
+        subcategory_id = self.kwargs['subcategory_id']
+        subcategory = get_object_or_404(QuizSubcategory, id=subcategory_id)
+        layers = subcategory.layers.all()
+        quizzes = []
+        for layer in layers:
+            quizzes += layer.quizzes.all()
+        return quizzes
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['user'] = self.request.user 
         return context
