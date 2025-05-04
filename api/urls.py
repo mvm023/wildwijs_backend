@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views.quiz import *
-from .views.auth import *
+from .views.quiz_views import *
+from .views.auth_views import *
 from knox import views as knox_views
 
 router = DefaultRouter()
@@ -17,6 +17,12 @@ quizUrlPatterns = [
     path("endQuiz/<int:quiz_id>/", end_quiz, name="end_quiz"),
 ]
 
+categoryUrlPatterns = [
+    path('categories/', CategoryViewSet.as_view({'get': 'list'}), name='category-list'),
+    path('subcategories/<int:category_id>/', SubcategoryViewSet.as_view({'get': 'list'}), name='subcategory-list'),
+    path('quizzes-by-subcategory/<int:subcategory_id>/', QuizBySubcategoryViewSet.as_view({'get': 'list'}), name='quizzes-by-subcategory'),
+]
+
 authenticationUrlPatterns = [
     path('confirm-email/<uidb64>/<token>/', confirm_email, name='confirm-email'),
     path('logout/', knox_views.LogoutView.as_view(), name='knox_logout'),
@@ -24,4 +30,4 @@ authenticationUrlPatterns = [
     path('whoami/', whoami),
 ]
 
-urlpatterns = router.urls + quizUrlPatterns + authenticationUrlPatterns
+urlpatterns = router.urls + quizUrlPatterns + categoryUrlPatterns + authenticationUrlPatterns

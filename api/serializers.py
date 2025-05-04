@@ -26,7 +26,6 @@ class QuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
         fields = "__all__"  
-        extra_fields = ["is_unlocked", "completed_attempts"] 
 
     def get_is_unlocked(self, obj):
         user = self.context.get('user')  # Access user from context
@@ -36,13 +35,43 @@ class QuizSerializer(serializers.ModelSerializer):
         user = self.context.get('user')  # Access user from context
         return obj.completed_attempts(user)  # Call the method to check completed attempts
 
-
     # Override the default field behavior to add "is_unlocked"
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['is_unlocked'] = self.get_is_unlocked(instance)  # Add the unlocked status
         representation['completed_attempts'] = self.get_completed_attempts(instance)  # Add the unlocked status
         return representation
+
+class QuizSubCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuizSubcategory
+        fields = "__all__"
+        extra_fields = ["completion_progress"]
+    
+    def get_completion_progress(self, obj):
+        user = self.context.get('user')
+        return obj.completion_progress(user)
+    
+    def to_representation(self, instance):
+        representation =  super().to_representation(instance)
+        representation["completion_progress"] = self.get_completion_progress(instance)
+        return representation
+    
+class QuizCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuizCategory
+        fields = "__all__"
+        extra_fields = ["completion_progress"]
+    
+    def get_completion_progress(self, obj):
+        user = self.context.get('user')
+        return obj.completion_progress(user)
+    
+    def to_representation(self, instance):
+        representation =  super().to_representation(instance)
+        representation["completion_progress"] = self.get_completion_progress(instance)
+        return representation
+
 
 
 class UserSerializer(serializers.ModelSerializer):

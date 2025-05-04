@@ -29,21 +29,60 @@ class Organism(models.Model):
     
 class QuizCategory(models.Model):
     name = models.CharField(max_length=255)
+    image_url = models.URLField()
 
     def __str__(self):
         return self.name
     
-class QuizSubCategory(models.Model):
+    def completion_progress(self, user):
+        total = 0
+        completed = 0
+
+        for subcat in self.subcategories.all():
+            progress = subcat.completion_progress(user)
+            total += progress['total']
+            completed += progress['completed']
+
+        percentage = round((completed / total) * 100, 1) if total > 0 else 0.0
+        return {
+            "completed": completed,
+            "total": total,
+            "percentage": percentage
+        }
+
+    
+class QuizSubcategory(models.Model):
     name = models.CharField(max_length=255)
     category = models.ForeignKey(QuizCategory, on_delete=models.CASCADE, related_name='subcategories')
+    image_url = models.URLField()
 
     def __str__(self):
         return self.name
+    
+    def completion_progress(self, user):
+        # Gather all quizzes in this subcategory through layers
+        all_quizzes = Quiz.objects.filter(layer__sub_category=self)
+        total = all_quizzes.count()
+
+        if not user.is_authenticated or total == 0:
+            return {"completed": 0, "total": total, "percentage": 0.0}
+
+        completed = UserQuizProgress.objects.filter(
+            user=user,
+            quiz__in=all_quizzes,
+            completed=True
+        ).count()
+
+        return {
+            "completed": completed,
+            "total": total,
+            "percentage": round((completed / total) * 100, 1) if total > 0 else 0.0
+        }
 
 
 class QuizLayer(models.Model):
-    sub_category = models.ForeignKey(QuizSubCategory, on_delete=models.CASCADE, related_name='layers')
-    level = models.PositiveIntegerField(help_text="The depth level of the layer in this category")
+    sub_category = models.ForeignKey(QuizSubcategory, on_delete=models.CASCADE, related_name='layers')
+    level = models.PositiveIntegerField(help_text="The depth level of the layer in this subcategory")
     
     class Meta:
         unique_together = ('sub_category', 'level')
@@ -101,7 +140,7 @@ class Quiz(models.Model):
         
         # Get the previous layer (level - 1)
         previous_layer = QuizLayer.objects.filter(
-            category=self.layer.sub_category, 
+            sub_category=self.layer.sub_category, 
             level=self.layer.level - 1
         ).first()
 
