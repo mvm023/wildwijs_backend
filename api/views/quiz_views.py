@@ -117,20 +117,15 @@ def start_quiz(request, quiz_id: int):
     })
 
 @api_view(['POST'])
+@authentication_classes([TokenAuthentication])  # Allows token auth if present
+@permission_classes([AllowAny])  # Allows access without authentication
 def answer_question(request):
-    print("Session key:", request.session.session_key)
-    print("Session items:", request.session.items())
-
     data = json.loads(request.body)
     quiz_session_id = data["quiz_session_id"]
     question_id = data["question_id"]
     selected = data["selected"]
 
     print(f"Option {selected} has been selected for question with id {question_id} and quiz session id {quiz_session_id}")
-
-    session_key = request.session.session_key
-    if not session_key:
-        return JsonResponse({"error": "No session"}, status=400)
 
     cache_key = f"{quiz_session_id}_{question_id}"
     correct = cache.get(cache_key)
