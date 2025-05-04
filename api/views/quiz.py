@@ -5,7 +5,12 @@ from django.http import JsonResponse
 from django.conf import settings
 from rest_framework import viewsets
 from django.core.cache import cache
-from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import AllowAny
+from knox.auth import TokenAuthentication
 from ..serializers import *
 from ..models import *
 
@@ -179,6 +184,31 @@ def get_wrong_answers(class_name, order, family, correct_name, difficulty=Diffic
     random.shuffle(wrong_names)
     return wrong_names[:3]
 
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])  # Allows token auth if present
+@permission_classes([AllowAny])  # Allows access without authentication
+def end_quiz(request, quiz_id: int):
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+
+    if request.user and request.user.is_authenticated:
+        # Logged-in user
+        user = request.user
+        progress, _ = UserQuizProgress.objects.get_or_create(user=user, quiz=quiz)
+        progress.attempts += 1
+        if progress.attempts >= quiz.required_attempts:
+            progress.completed = True
+        progress.save()
+        return Response(
+            {"message": "Quiz attempt recorded.", "attempts": progress.attempts},
+            status=status.HTTP_200_OK
+        )
+
+    # Not logged in: do nothing for now
+    return Response(
+        {"message": "Anonymous users' progress not recorded."},
+        status=status.HTTP_200_OK
+    )
+
 
 class OrganismViewSet(viewsets.ModelViewSet):
     queryset = Organism.objects.all()
@@ -187,3 +217,8 @@ class OrganismViewSet(viewsets.ModelViewSet):
 class QuizViewSet(viewsets.ModelViewSet):
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['user'] = self.request.user  # Pass the user object to the serializer context
+        return context

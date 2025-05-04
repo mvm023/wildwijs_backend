@@ -12,12 +12,12 @@ class ClassificationSerializer(serializers.ModelSerializer):
 class OrganismSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organism
-        fields = ('id','name','description','scientific_name','classification')
+        fields = ('id','name','description','scientific_name','classification', 'image_url')
 
 class QuizLayerSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuizLayer
-        fields = ['id', 'level', 'category']
+        fields = ['id', 'level', 'sub_category']
 
 
 class QuizSerializer(serializers.ModelSerializer):
@@ -25,7 +25,25 @@ class QuizSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quiz
-        fields = "__all__"
+        fields = "__all__"  
+        extra_fields = ["is_unlocked", "completed_attempts"] 
+
+    def get_is_unlocked(self, obj):
+        user = self.context.get('user')  # Access user from context
+        return obj.is_unlocked(user)  # Call the method to check if the quiz is unlocked
+
+    def get_completed_attempts(self, obj):
+        user = self.context.get('user')  # Access user from context
+        return obj.completed_attempts(user)  # Call the method to check completed attempts
+
+
+    # Override the default field behavior to add "is_unlocked"
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['is_unlocked'] = self.get_is_unlocked(instance)  # Add the unlocked status
+        representation['completed_attempts'] = self.get_completed_attempts(instance)  # Add the unlocked status
+        return representation
+
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -51,7 +69,23 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-class PublicUserSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email']
+        fields = ('id', 'email', 'username', 'password')
+        extra_kwargs = { 'password': {'write_only':True}}
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        user.is_active = False  # Require email confirmation
+        user.save()
+        return user
+    
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret.pop('password', None)
+        return ret

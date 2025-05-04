@@ -42,8 +42,7 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:5173",
+    "https://localhost:5173",
     "https://wildwijs.nl",
 ]
 
@@ -64,7 +63,8 @@ INSTALLED_APPS = [
     'djoser',
     'api',
     'corsheaders',
-    'storages'
+    'storages',
+    'knox',
 ]
 
 MIDDLEWARE = [
@@ -131,8 +131,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # REST Framework authentication settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',  # Token-based authentication
-        'rest_framework.authentication.SessionAuthentication',
+        'knox.auth.TokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.AllowAny',  # Change this later when login is required
@@ -203,7 +202,19 @@ CACHES = {
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
-SESSION_COOKIE_SAMESITE = "None"   # or "None" for cross-origin
-SESSION_COOKIE_SECURE = True     # Only for local development
+SESSION_COOKIE_SAMESITE = "None"  
+SESSION_COOKIE_SECURE = True   
+SESSION_COOKIE_PARTITIONED = True
+
 
 CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://localhost:5173",
+    "https://wildwijs.nl",  # Include this for production
+]
+
+CSRF_COOKIE_NAME = "csrftoken"
+CSRF_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_HTTPONLY = False  # Should be False for JS access
+CSRF_COOKIE_SECURE = True   
