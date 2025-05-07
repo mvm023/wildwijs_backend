@@ -41,10 +41,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-CORS_ALLOWED_ORIGINS = [
-    "https://localhost:5173",
-    "https://wildwijs.nl",
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition
 
@@ -211,10 +208,15 @@ CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
     "https://localhost:5173",
-    "https://wildwijs.nl",  # Include this for production
+    "https://wildwijs.nl",
 ]
 
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_COOKIE_SAMESITE = "None"
-CSRF_COOKIE_HTTPONLY = False  # Should be False for JS access
+CSRF_COOKIE_HTTPONLY = False 
 CSRF_COOKIE_SECURE = True   
+CSRF_COOKIE_NAME = "csrftoken"
+
+CORS_ORIGIN_WHITELIST = (
+    "https://localhost:5173",
+)

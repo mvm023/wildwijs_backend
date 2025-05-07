@@ -40,14 +40,14 @@ def fetch_quiz_data(quiz_id: int):
     organisms = Organism.objects.all()
 
     # Apply classification filters if specified
-    if quiz.class_name:
-        organisms = organisms.filter(classification__class_name__in=quiz.class_name)
-    if quiz.order:
-        organisms = organisms.filter(classification__order__in=quiz.order)
-    if quiz.family:
-        organisms = organisms.filter(classification__family__in=quiz.family)
-    if quiz.genus:
-        organisms = organisms.filter(classification__genus__in=quiz.genus)
+    if quiz.class_names:
+        organisms = organisms.filter(classification__class_name__in=quiz.class_names)
+    if quiz.orders:
+        organisms = organisms.filter(classification__order__in=quiz.orders)
+    if quiz.families:
+        organisms = organisms.filter(classification__family__in=quiz.families)
+    if quiz.genera:
+        organisms = organisms.filter(classification__genus__in=quiz.genera)
 
     # Ensure image exists
     organisms = organisms.filter(image_url__isnull=False).exclude(image_url='')

@@ -31,6 +31,12 @@ class QuizCategory(models.Model):
     name = models.CharField(max_length=255)
     image_url = models.URLField()
 
+    phylums = models.JSONField(default=list, blank=True)
+    class_names = models.JSONField(default=list, blank=True)
+    orders = models.JSONField(default=list, blank=True)
+    families = models.JSONField(default=list, blank=True)
+    genera = models.JSONField(default=list, blank=True)
+
     def __str__(self):
         return self.name
     
@@ -55,6 +61,12 @@ class QuizSubcategory(models.Model):
     name = models.CharField(max_length=255)
     category = models.ForeignKey(QuizCategory, on_delete=models.CASCADE, related_name='subcategories')
     image_url = models.URLField()
+
+    phylums = models.JSONField(default=list, blank=True)
+    class_names = models.JSONField(default=list, blank=True)
+    orders = models.JSONField(default=list, blank=True)
+    families = models.JSONField(default=list, blank=True)
+    genera = models.JSONField(default=list, blank=True)
 
     def __str__(self):
         return self.name
@@ -81,6 +93,7 @@ class QuizSubcategory(models.Model):
 
 
 class QuizLayer(models.Model):
+    name = models.CharField(max_length=255, blank=True)
     sub_category = models.ForeignKey(QuizSubcategory, on_delete=models.CASCADE, related_name='layers')
     level = models.PositiveIntegerField(help_text="The depth level of the layer in this subcategory")
     
@@ -107,10 +120,10 @@ class DifficultyLevel(models.TextChoices):
 class Quiz(models.Model):
     name = models.CharField(max_length=255)
     image_url = models.URLField()
-    class_name = models.JSONField(default=list, blank=True)
-    order = models.JSONField(default=list, blank=True)
-    family = models.JSONField(default=list, blank=True)
-    genus = models.JSONField(default=list, blank=True)
+    class_names = models.JSONField(default=list, blank=True)
+    orders = models.JSONField(default=list, blank=True)
+    families = models.JSONField(default=list, blank=True)
+    genera = models.JSONField(default=list, blank=True)
     max_length = models.PositiveIntegerField(default=15)
     difficulty = models.CharField(
         max_length=10,

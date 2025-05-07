@@ -39,7 +39,7 @@ class QuizSerializer(serializers.ModelSerializer):
 class QuizSubCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = QuizSubcategory
-        fields = "__all__"
+        fields = ("name", "image_url", "id")
         extra_fields = ["completion_progress"]
     
     def get_completion_progress(self, obj):
@@ -54,7 +54,7 @@ class QuizSubCategorySerializer(serializers.ModelSerializer):
 class QuizCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = QuizCategory
-        fields = "__all__"
+        fields = ("name", "image_url", "id")
         extra_fields = ["completion_progress"]
     
     def get_completion_progress(self, obj):
