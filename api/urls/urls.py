@@ -1,7 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views.quiz_views import *
-from .views.auth_views import *
+from ..views.quiz_views import *
+from ..views.auth_views import *
+from . import admin_urls
 from knox import views as knox_views
 
 router = DefaultRouter()
@@ -30,4 +31,12 @@ authenticationUrlPatterns = [
     path('whoami/', whoami),
 ]
 
-urlpatterns = router.urls + quizUrlPatterns + categoryUrlPatterns + authenticationUrlPatterns
+urlpatterns = (
+    router.urls +
+    quizUrlPatterns +
+    categoryUrlPatterns +
+    authenticationUrlPatterns +
+    [
+        path('admin-api/', include(admin_urls.adminUrlPatterns)),
+    ]
+)

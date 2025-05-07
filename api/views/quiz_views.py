@@ -13,7 +13,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import AllowAny
 from knox.auth import TokenAuthentication
 from ..permissions import IsAdminForUnsafeMethods
-from ..serializers import *
+from ..serializers.serializers import *
 from ..models import *
 
 
