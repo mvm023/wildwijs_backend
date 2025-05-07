@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny
 from knox.auth import TokenAuthentication
+from ..permissions import IsAdminForUnsafeMethods
 from ..serializers import *
 from ..models import *
 
@@ -209,10 +210,12 @@ def end_quiz(request, quiz_id: int):
 class OrganismViewSet(viewsets.ModelViewSet):
     queryset = Organism.objects.all()
     serializer_class = OrganismSerializer
+    permission_classes = [IsAdminForUnsafeMethods]
 
 class QuizViewSet(viewsets.ModelViewSet):
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
+    permission_classes = [IsAdminForUnsafeMethods]
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
