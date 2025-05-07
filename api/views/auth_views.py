@@ -55,16 +55,19 @@ def confirm_email(request, uidb64, token):
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-@ensure_csrf_cookie
 @api_view(['GET'])
 def whoami(request):
     if request.user.is_authenticated:
-        return Response({
+        data = {
             "username": request.user.username,
             "email": request.user.email,
-        })
+        }
+        if request.user.is_superuser:
+            data["is_admin"] = True
+        return Response(data)
     else:
         return Response({"username": None})
+
 
 class RegisterViewSet(viewsets.ViewSet):
     permission_classes = [permissions.AllowAny]
