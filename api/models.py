@@ -22,14 +22,16 @@ class Organism(models.Model):
     alternative_names = models.JSONField(null=True, blank=True)  # New field for alternative names as a list of strings
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now = True)
-    image_url = models.URLField(blank=True, null=True)
+    
+    is_verified = models.BooleanField(default=False)
+    image_urls = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return self.name
     
 class QuizCategory(models.Model):
     name = models.CharField(max_length=255)
-    image_url = models.URLField()
+    image_url = models.URLField(blank=True, null=True)
 
     phylums = models.JSONField(default=list, blank=True)
     class_names = models.JSONField(default=list, blank=True)
@@ -60,7 +62,7 @@ class QuizCategory(models.Model):
 class QuizSubcategory(models.Model):
     name = models.CharField(max_length=255)
     category = models.ForeignKey(QuizCategory, on_delete=models.CASCADE, related_name='subcategories')
-    image_url = models.URLField()
+    image_url = models.URLField(blank=True, null=True)
 
     phylums = models.JSONField(default=list, blank=True)
     class_names = models.JSONField(default=list, blank=True)
@@ -119,7 +121,7 @@ class DifficultyLevel(models.TextChoices):
 
 class Quiz(models.Model):
     name = models.CharField(max_length=255)
-    image_url = models.URLField()
+    image_url = models.URLField(blank=True, null=True)
     class_names = models.JSONField(default=list, blank=True)
     orders = models.JSONField(default=list, blank=True)
     families = models.JSONField(default=list, blank=True)
