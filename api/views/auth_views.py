@@ -52,7 +52,6 @@ def confirm_email(request, uidb64, token):
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-@ensure_csrf_cookie
 @api_view(['GET'])
 def whoami(request):
     if request.user.is_authenticated:
