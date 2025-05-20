@@ -73,5 +73,7 @@ venv.bak/
 localhost.crt
 localhost.key
 localhost.csr
+localhost.pem
+localhost-key.pem
 
 .DS_Store

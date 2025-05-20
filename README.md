@@ -1,14 +1,37 @@
-This is the backend for Wildwijs, a Duolingo-style quiz app about Dutch nature, built with Django. 
+# Wildwijs backend
 
-To get started, run the following commands in the project directory:
+This is the backend for wildwijs, a Duolingo-style quiz app about Dutch nature, built with Django.
+
+## Getting started
+
+To get started, clone the directory, and run the following commands in the program directory:
+
+#### 1. Create and activate virtual environment
+
+python -m venv venv
+source venv/bin/activate
+
+#### 2. Install dependencies
 
 pip install -r requirements.txt
+
+#### 3. Create environment file
+
+cp .env.example .env
+
+- Populate this .env file with proper values to gain access to all functionalities. 
+
+#### 4. Generate HTTPS certificates for localhost
+
+mkcert -install\
+mkcert localhost
+
+#### 5. Run first migration
+
 python manage.py migrate
 
-You will furthermore need to create a .env file if you wish to make full use of all functionalities. A .env.example file has been included for reference.
+## Building locally
 
+To build the backend locally, run the following command in the program directory
 
-
-To build locally, run the following command:
-
-python manage.py runserver
+python manage.py runserver_plus --cert-file=localhost.pem --key-file=localhost-key.pem
