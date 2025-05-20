@@ -32,6 +32,8 @@ python manage.py migrate
 
 ## Building locally
 
-To build the backend locally, run the following command in the program directory
+To build the backend locally, activate the virtual environment and run the following command in the program directory:
 
 python manage.py runserver_plus --cert-file=localhost.pem --key-file=localhost-key.pem
+
+- The backend should now be running on https://127.0.0.1:8000.
